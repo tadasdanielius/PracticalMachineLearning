@@ -9,7 +9,7 @@
 .Rproj.user
 
 #Train/test data
-.csv
+*.csv
 
 #cache
 description_cache/
