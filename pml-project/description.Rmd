@@ -1,0 +1,124 @@
+---
+title: "Practical Machine Learning Project"
+author: "Tadas Danielius"
+date: "Monday, September 08, 2014"
+output: html_document
+---
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+library(caret)
+library(corrplot)
+```
+
+#Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behaviour, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset). 
+
+
+#Data
+
+The training data for this project are available here: 
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+The test data are available here: 
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+The data for this project come from this source: http://groupware.les.inf.puc-rio.br/har. 
+
+##Loading the data
+
+```{r}
+url_training <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv";
+url_testing <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv";
+
+# Downloading data
+
+downloadFile <- function(url,filename) {
+    if (!file.exists(filename)) {
+        download.file(url,filename) 
+    }
+    downloaded_data <- pml_train <- read.csv(file = filename, na.strings = c('NA','#DIV/0!',''))
+    return(downloaded_data)
+}
+
+raw.training <- downloadFile(url_training, "pml-training.csv");
+raw.testing <- downloadFile(url_testing, "pml-testing.csv");
+```
+
+##Cleaning data
+
+```{r}
+dim(raw.training)
+```
+
+The number of columns is high enough for our purpose and some columns are mostly have NA values. Therefore we need to get rid most of the columns and hopefully pick the ones which is important to build our prediction model.
+
+Looking at the names of the columns clearly we can see that columns containing string _timestamps_, _user_, _avg_,_kurtosis_,_skewness_, aren't that important, besides _avg_ contains alot NA. So our approach is backwards eliminations of the columns, from the full set removing unnecessary names.
+
+```{r}
+columns_to_remove <- grep("(X|min|max|amplitude|avg|var|stddev|total|window|user|raw|timestamp|kurtosis|skewness)",names(raw.training));
+training <- subset(raw.training,select=-columns_to_remove);
+columns_to_remove <- grep("(X|min|max|amplitude|avg|var|stddev|total|window|user|raw|timestamp|kurtosis|skewness)",names(raw.testing));
+testing <- subset(raw.testing,select=-columns_to_remove);
+```
+
+We have reduced our subset to `r length(names(training))` And hopefully picked the right data.
+
+##Preparing data for Testing and Cross-Validation
+
+For optimal model with highest accuracy it is wise to partition our data into different samples. We choose to split randomly our training data into samples with 70% training and 30% testing data.
+
+```{r}
+set.seed(21312)
+
+inTrain <- createDataPartition(training$classe, p=0.70, list=FALSE)
+samples.training <- training[inTrain,]
+samples.testing <- training[-inTrain,]
+```
+
+##Pre-testing data exploration
+
+Since we have relatively large number of features we should check if our data are correlated.
+
+```{r}
+classe_column_num <- dim(training)[[2]];
+corMatrix <- cor(training[,-classe_column_num])
+diag(corMatrix) <- 0
+corrplot(corMatrix,tl.cex=0.3)
+```
+
+We can see from the plot that there are number of features highly correlated with each other. In this case, there is a need to use principal component analysis (PCA) to transform the data to a smaller sub–space where the new variable are uncorrelated with one another. The preProcess class can apply this transformation by including "pca" in the method argument. Doing this will also force scaling of the predictors
+
+#Training
+
+We have everything we need for training our model. We will use Random Forest algorithm
+
+```{r cache=TRUE,warning=FALSE}
+rfFit <- train(classe~., training, method = "rf", preProcess=c("pca"), trControl = trainControl(method = "cv"))
+rfFit$finalModel
+```
+
+**Expected error**: The model has acceptible estimated OOB error rate of `r round(rfFit$finalModel$err.rate[500,1]*100,digits=2)`%
+
+#Model evaluation
+
+To get accurate statisticis about performance of our model we can use confusion matrix.
+
+```{r}
+testing.predictions <- predict(rfFit,samples.testing);
+cM <- confusionMatrix(samples.testing$classe, testing.predictions);
+cM
+```
+
+We can see clearly that model performs very well with accuracy `r cM$overall[1]*100`% ! Surely it is optimistic accuracy. The out of sample error is `r cM$overall[1]`. The out of sample error is calculated as `1 - accuracy` for predictions made against the cross-validation set. **which basically means that we have no out of sample errors !**.
+
+#Final predictions
+
+Finally let's get our answers for the testing data we were given.
+
+```{r}
+answers <- predict(rfFit,testing);
+answers
+```
