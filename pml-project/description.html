@@ -122,7 +122,7 @@ corrplot(corMatrix,tl.cex=0.3)</code></pre>
 <div id="training" class="section level1">
 <h1>Training</h1>
 <p>We have everything we need for training our model. We will use Random Forest algorithm</p>
-<pre class="r"><code>rfFit &lt;- train(classe~., training, method = &quot;rf&quot;, preProcess=c(&quot;pca&quot;), trControl = trainControl(method = &quot;cv&quot;))
+<pre class="r"><code>rfFit &lt;- train(classe~., samples.training, method = &quot;rf&quot;, preProcess=c(&quot;pca&quot;), trControl = trainControl(method = &quot;cv&quot;))
 rfFit$finalModel</code></pre>
 <pre><code>## 
 ## Call:
@@ -131,64 +131,61 @@ rfFit$finalModel</code></pre>
 ##                      Number of trees: 500
 ## No. of variables tried at each split: 2
 ## 
-##         OOB estimate of  error rate: 1.57%
+##         OOB estimate of  error rate: 2.54%
 ## Confusion matrix:
 ##      A    B    C    D    E class.error
-## A 5563    5   10    0    2    0.003047
-## B   48 3713   29    0    7    0.022123
-## C    3   30 3365   22    2    0.016657
-## D    5    4   99 3101    7    0.035759
-## E    0    8   15   12 3572    0.009703</code></pre>
-<p><strong>Expected error</strong>: The model has acceptible estimated OOB error rate of 1.57%</p>
+## A 3882    8    9    4    3    0.006144
+## B   39 2570   41    3    5    0.033108
+## C    6   36 2318   34    2    0.032554
+## D    4    4   98 2139    7    0.050178
+## E    2   13   19   12 2479    0.018218</code></pre>
+<p><strong>Expected error</strong>: The model has acceptible estimated OOB error rate of 2.54%</p>
 </div>
 <div id="model-evaluation" class="section level1">
 <h1>Model evaluation</h1>
 <p>To get accurate statisticis about performance of our model we can use confusion matrix.</p>
-<pre class="r"><code>testing.predictions &lt;- predict(rfFit,samples.testing);</code></pre>
-<pre><code>## Loading required package: randomForest
-## randomForest 4.6-10
-## Type rfNews() to see new features/changes/bug fixes.</code></pre>
-<pre class="r"><code>cM &lt;- confusionMatrix(samples.testing$classe, testing.predictions);
+<pre class="r"><code>testing.predictions &lt;- predict(rfFit,samples.testing);
+cM &lt;- confusionMatrix(samples.testing$classe, testing.predictions);
 cM</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 1674    0    0    0    0
-##          B    0 1139    0    0    0
-##          C    0    0 1026    0    0
-##          D    0    0    0  964    0
-##          E    0    0    0    0 1082
+##          A 1665    4    4    1    0
+##          B   19 1101   16    0    3
+##          C    2    9 1006    6    3
+##          D    0    2   47  910    5
+##          E    0    5    9    4 1064
 ## 
 ## Overall Statistics
-##                                     
-##                Accuracy : 1         
-##                  95% CI : (0.999, 1)
-##     No Information Rate : 0.284     
-##     P-Value [Acc &gt; NIR] : &lt;2e-16    
-##                                     
-##                   Kappa : 1         
-##  Mcnemar's Test P-Value : NA        
+##                                        
+##                Accuracy : 0.976        
+##                  95% CI : (0.972, 0.98)
+##     No Information Rate : 0.286        
+##     P-Value [Acc &gt; NIR] : &lt;2e-16       
+##                                        
+##                   Kappa : 0.97         
+##  Mcnemar's Test P-Value : NA           
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity             1.000    1.000    1.000    1.000    1.000
-## Specificity             1.000    1.000    1.000    1.000    1.000
-## Pos Pred Value          1.000    1.000    1.000    1.000    1.000
-## Neg Pred Value          1.000    1.000    1.000    1.000    1.000
-## Prevalence              0.284    0.194    0.174    0.164    0.184
-## Detection Rate          0.284    0.194    0.174    0.164    0.184
+## Sensitivity             0.988    0.982    0.930    0.988    0.990
+## Specificity             0.998    0.992    0.996    0.989    0.996
+## Pos Pred Value          0.995    0.967    0.981    0.944    0.983
+## Neg Pred Value          0.995    0.996    0.984    0.998    0.998
+## Prevalence              0.286    0.190    0.184    0.156    0.183
+## Detection Rate          0.283    0.187    0.171    0.155    0.181
 ## Detection Prevalence    0.284    0.194    0.174    0.164    0.184
-## Balanced Accuracy       1.000    1.000    1.000    1.000    1.000</code></pre>
-<p>We can see clearly that model performs very well with accuracy 100% ! Surely it is optimistic accuracy. The out of sample error is 1. The out of sample error is calculated as <code>1 - accuracy</code> for predictions made against the cross-validation set. <strong>which basically means that we have no out of sample errors !</strong>.</p>
+## Balanced Accuracy       0.993    0.987    0.963    0.989    0.993</code></pre>
+<p>We can see clearly that model performs very well with accuracy 97.6381%. The out of sample error is 0.9764. The out of sample error is calculated as <code>1 - accuracy</code> for predictions made against the cross-validation set.</p>
 </div>
 <div id="final-predictions" class="section level1">
 <h1>Final predictions</h1>
 <p>Finally let’s get our answers for the testing data we were given.</p>
 <pre class="r"><code>answers &lt;- predict(rfFit,testing);
 answers</code></pre>
-<pre><code>##  [1] B A B A A E D B A A B C B A E E A B B B
+<pre><code>##  [1] B A C A A E D B A A B C B A E E A B B B
 ## Levels: A B C D E</code></pre>
 </div>
 

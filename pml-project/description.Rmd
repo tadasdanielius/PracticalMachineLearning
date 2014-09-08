@@ -96,7 +96,7 @@ We can see from the plot that there are number of features highly correlated wit
 We have everything we need for training our model. We will use Random Forest algorithm
 
 ```{r cache=TRUE,warning=FALSE}
-rfFit <- train(classe~., training, method = "rf", preProcess=c("pca"), trControl = trainControl(method = "cv"))
+rfFit <- train(classe~., samples.training, method = "rf", preProcess=c("pca"), trControl = trainControl(method = "cv"))
 rfFit$finalModel
 ```
 
@@ -112,7 +112,7 @@ cM <- confusionMatrix(samples.testing$classe, testing.predictions);
 cM
 ```
 
-We can see clearly that model performs very well with accuracy `r cM$overall[1]*100`% ! Surely it is optimistic accuracy. The out of sample error is `r cM$overall[1]`. The out of sample error is calculated as `1 - accuracy` for predictions made against the cross-validation set. **which basically means that we have no out of sample errors !**.
+We can see clearly that model performs very well with accuracy `r cM$overall[1]*100`%. The out of sample error is `r cM$overall[1]`. The out of sample error is calculated as `1 - accuracy` for predictions made against the cross-validation set.
 
 #Final predictions
 
