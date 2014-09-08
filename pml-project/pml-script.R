@@ -40,7 +40,7 @@ corrplot(corMatrix,tl.cex=0.3)
 
 # Training
 
-#rfFit <- train(classe~., training, method = "rf", preProcess=c("pca"), trControl = trainControl(method = "cv"))
+rfFit <- train(classe~., training, method = "rf", preProcess=c("pca"), trControl = trainControl(method = "cv"))
 
 # Testing predictions
 
